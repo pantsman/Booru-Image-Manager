@@ -1,3 +1,9 @@
+import requests, hashlib, time
+
+from pathlib import Path
+
+baseUrl='https://danbooru.donmai.us/posts.json/'
+
 def errorReporting(errorCode):
     if errorCode == 403:
         return 'Error 403 received Access Denied Ending Script'
@@ -12,31 +18,36 @@ def errorReporting(errorCode):
     elif errorCode == 503:
         return 'Error 503 received Remote Service Cannot Handle the Request Ending Script'
     else:
-        return 'Error {0} Received Ending Script'.format(errorCode)
+        return 'Error {0} Received'.format(errorCode)
 
-def danboMd5(localMd5):
-    import requests
-    
-    baseUrl='https://danbooru.donmai.us/posts.json?md5={0}'.format(localMd5)
-    danboRequest = requests.get('{0}'.format(baseUrl))
+def danboMd5(localMd5):  
+    apiBase='?md5={0}'.format(localMd5)
+    danboRequest = requests.get('{0}{1}'.format(baseUrl,apiBase))
     return(danboRequest)
 
-def danboDownload(rootDir, ratings, tags, localHashes):
-    import requests, hashlib, time
-    from pathlib import Path
+def search(tags,page):
+    baseTags='?tags='+'%20'.join(tags)
 
+    searchRequest = requests.get('{0}{1}&page={2}&limit=200'.format(baseUrl,baseTags,page))
+
+    if searchRequest.status_code != 200:
+        return errorReporting(searchRequest.status_code)
+    elif len(searchRequest.json()) <= 0:
+        return searchRequest
+    
+    return searchRequest
+
+def downloadBulk(rootDir, ratings, tags, localHashes):
     s = requests.session()
     baseTags='?tags='+'%20'.join(tags)
-    baseUrl = 'https://danbooru.donmai.us/'
     page=1
 
     while True:
-        danboRequest = requests.get('{0}posts.json/{1}&page={2}'.format(baseUrl,baseTags,page))
+        danboRequest = requests.get('{0}{1}&page={2}'.format(baseUrl,baseTags,page))
         if danboRequest.status_code != 200:
-            print(errorReporting(danboRequest.status_code))
-            break 
+            return errorReporting(danboRequest.status_code)
         elif len(danboRequest.json()) <= 0:
-            break
+            return "Download Complete"
         print('Processing Page: {0}'.format(page))
         
         for danboImage in danboRequest.json():

@@ -1,0 +1,14 @@
+#File database location
+database: "images.db"
+#Danbaord API settings this does nothing right now
+danboard:
+  - api: "test"
+  - username: "bob"
+  - pass: "shouldn't be here"
+#Tags to exclude from all downloads
+banned_tags:
+  - "bad stuff"
+#Allowed ratings
+ratings:
+  - "s"
+  - "q"
