@@ -1,64 +1,65 @@
-import requests, json, time, urllib, hashlib, sys, yaml, sqlite3, tqdm, os, platform, helper
+import requests, json, time, urllib, hashlib, sys, yaml, sqlite3, tqdm, os, platform, helper, argparse, logging, booru
 
+from booru import danboard, gelbooru
 from pathlib import Path, PurePath
-from booru import danboard
+#from booru import danboard
 
-def startup():
-    print('Loading App')
-    configLoc = Path('{0}/{1}'.format(Path(__file__).parent,'config.yml'))
-    if Path(configLoc).exists() == True:
-        print('\tConfig file found')
-        with open(configLoc) as configFile:
-            try:
-                print('\tLoading Config')
-                config = yaml.load(configFile)
-            except yaml.YAMLError as exc:
-                print(exc)
-                exit()
+def startup(configLoc):
+    #configLoc=args.configLoc
+    if args.verbose == True:
+        logging.basicConfig(level=logging.INFO)
+        logging.info('Loading App')
+        if Path(configLoc).exists() == True:
+            logging.info('Config file found')
+            with open(configLoc) as configFile:
+                try:
+                    logging.info('Loading Config')
+                    config = yaml.load(configFile)
+                except yaml.YAMLError as exc:
+                    logging.error(exc)
+                    exit()
         
-        print('\tConnecting to DB')
-        try:
-            conn = sqlite3.connect(config['database'])
-        except:
-            print('Failed to connect to DB')
+            logging.info('Connecting to DB')
+            try:
+                conn = sqlite3.connect(config['database'])
+            except:
+                logging.error('Failed to connect to DB')
+                exit()
+            cur = conn.cursor()
+            logging.info('Creating Image Table if Missing')
+            cur.execute('''CREATE TABLE IF NOT EXISTS images (hash,path)''')
+            conn.commit()
+            conn.close()
+            logging.info('Startup Complete\n\n')
+            return config
+        else:
+            logging.error('Configuration File Missing Exiting')
+            exit()
+    else:
+        if Path(configLoc).exists() == True:
+            with open(configLoc) as configFile:
+                try:
+                    config = yaml.load(configFile)
+                except yaml.YAMLError as exc:
+                    exit()
+            try:
+                conn = sqlite3.connect(config['database'])
+            except:
+                exit()
+            cur = conn.cursor()
+            cur.execute('''CREATE TABLE IF NOT EXISTS images (hash,path)''')
+            conn.commit()
+            conn.close()
+            return config
+        else:
             exit()
 
-        cur = conn.cursor()
 
-        print('\tValidating Image Table')
-        
-        cur.execute('''CREATE TABLE IF NOT EXISTS images (hash,path)''')
-
-        conn.commit()
-        conn.close()
-
-        print('\tStartup Complete\n\n')
-        return config
-    else:
-        print('Configuration File Missing Exiting')
-        exit()
-
-def menu():
-    print('Booru Image Manager\n\n'\
-            '1. Load/Refresh Folders\n'\
-            '2. Database Stats\n'\
-            '3. Download Images\n'\
-            '4. Tag Sort\n'\
-            '5. Exit'\
-            )
-    try:
-        option = int(input('Selection:'))
-    except:
-        print('Invalid Input Try Again')
-        return None
-
-    return option
-
-def loadFolder(imageDB):
+def loadFolder(imageDB, imageFolder):
     pathList = []
     newPaths = []
     newHashes = []
-    imageFolder = Path(input('Path to Folder:'))
+    #imageFolder = Path(input('Path to Folder:'))
 
     helper.genPaths(imageFolder, pathList)
 
@@ -92,12 +93,12 @@ def loadFolder(imageDB):
     input('Import complete press enter to continue')
     helper.clearScreen()
 
-def download(database,banned_tags,ratings):
+def download(database,banned_tags,ratings,tags,downloadDir):
     s = requests.session()
     source = 'danbooru'
     newImages = []
-    tags = [x.strip(' ') for x in str.split(input('Please enter your tags seperated by commas:'),',')]
-    downloadDir = Path(input('Please enter the directory to download to:'))
+    #tags = [x.strip(' ') for x in str.split(input('Please enter your tags seperated by commas:'),',')]
+    #downloadDir = Path(input('Please enter the directory to download to:'))
     page=1
     try:
         conn = sqlite3.connect(database)
@@ -129,18 +130,27 @@ def download(database,banned_tags,ratings):
     print(len(newImages))
 
 if __name__ == "__main__":
-    config = startup()
 
-    while (True):
-        option = menu()
-        helper.clearScreen()
-        if option == 1:
-            loadFolder(config['database'])
-        if option == 3:
-            download(config['database'],config['banned_tags'],config['ratings'])
-        if option == 4:
-            helper.tagSort(config['database'])
-        if option == 5:
-            exit()
-        if option == 6:
-            print(config['banned_tags'])
+    parser = argparse.ArgumentParser(description='Booru Image Manager')
+
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Increases Verbosity')
+    parser.add_argument('-c', '--config', dest='configLoc', default=Path('{0}/{1}'.format(Path(__file__).parent,'config.yml')), help='Specifies the Location of the Configuration File')
+    
+    subParsers = parser.add_subparsers(help='Available Commands', title='subcommands')
+    
+    parserDownload = subParsers.add_parser('download', help='Download Images')
+    parserDownload.add_argument('-t', '--tags', dest='tags', help='Tags to Search for', nargs='+', required=True)
+    parserDownload.add_argument('-f', '--folder', dest='downloadFolder', help='Folder to Download Images to', required=True)
+    parserDownload.add_argument('-b', '--booru', dest='booru', help='Booru Site to Search')
+    
+    parserLoad = subParsers.add_parser('load', help='Load New Folders/Images')
+    parserLoad.add_argument('-f', '--folder', dest='imageFolder', help='Location of Folder to Load', required=True)
+
+    args = parser.parse_args()
+    
+    config = startup(args.configLoc)
+
+    if args.downloadFolder:
+        download(config['database'],config['banned_tags'],config['ratings'],args.tags, args.downloadFolder)
+    elif args.imageFolder:
+        loadFolder(config['database'], args.imageFolder)
