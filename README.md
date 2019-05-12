@@ -1,10 +1,15 @@
 # Booru Image Manager
 
 An attempt a a simple management script for various pictures acrued on the internet. This is pretty much a personal project and don't expect to see it get a lot of use.
-Currently the site queries only utilize Danbooru but the plan is to incorporate other sites once I get core functionality down. Working functions are as follows
+Currently supports the following sites:
 
-1. Loading/Refreshing Folders
-2. Downloading
-3. THAT'S IT!
+- Danbooru
+- Konachan .com/.net
+- Yandere
+- Sakugabooru
 
-The other menu options call nothing I'll fix that at some point
+Here's what the script currently does:
+1. Downloading
+2. THAT'S IT!
+
+I had other plans for additional functionality but rolled that back till I had at least one function working well :sob: will also probably be renamed at some point :neutral_face:

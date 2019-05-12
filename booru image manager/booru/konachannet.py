@@ -2,7 +2,7 @@ import requests, hashlib, time
 
 from pathlib import Path
 
-baseUrl='https://konachan.com/post.json'
+baseUrl='https://konachan.net/post.json'
 
 def errorReporting(errorCode):
     if errorCode == 403:
@@ -44,7 +44,7 @@ def downloadBulk(tags, page, downloadDir, ratings, banned_tags):
     s = requests.session()
     result = search(tags,page)
     while type(result) != str and len(result.json()) > 0:
-        print('[Konachan]Processing page: {0}'.format(page))
+        print('[Konachan.net]Processing page: {0}'.format(page))
         for image in result.json():
             if 'file_url' in image:
                 downloadFile = Path('{0}/{1}.{2}'.format(downloadDir,image['id'],(image['file_url'].split('.')[-1])))

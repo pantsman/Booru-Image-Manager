@@ -45,8 +45,8 @@ if __name__ == "__main__":
     parserDownload.add_argument('-b', '--booru', dest='booru', help='Booru Site to Search', required=True)
     parserDownload.add_argument('-p', '--page', dest='page', help='Page to start downloading images from', nargs='?', default=1)
     
-    parserLoad = subParsers.add_parser('load', help='Load New Folders/Images')
-    parserLoad.add_argument('-f', '--folder', dest='imageFolder', help='Location of Folder to Load', required=True)
+    #parserLoad = subParsers.add_parser('load', help='Load New Folders/Images')
+    #parserLoad.add_argument('-f', '--folder', dest='imageFolder', help='Location of Folder to Load', required=True)
 
     args = parser.parse_args()
     

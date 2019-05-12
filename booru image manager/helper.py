@@ -1,6 +1,6 @@
 import hashlib
 from pathlib import Path
-from booru import danboard, konachan, yandere
+from booru import danboard, konachan, yandere, konachannet, sakugabooru
 
 def getMd5 (filePath):
     with open(filePath, 'rb') as localImage:
@@ -12,7 +12,11 @@ def download(banned_tags,ratings,tags,downloadDir, booru, page):
 
     if booru == 'danbooru':
         danboard.downloadBulk(tags, page, downloadDir, ratings, banned_tags)
-    if booru == 'konachan':
+    elif booru == 'konachan':
         konachan.downloadBulk(tags, page, downloadDir, ratings, banned_tags)
-    if booru == 'yandere':
+    elif booru == 'yandere':
         yandere.downloadBulk(tags, page, downloadDir, ratings, banned_tags)
+    elif booru == 'konachannet':
+        konachannet.downloadBulk(tags, page, downloadDir, ratings, banned_tags)
+    elif booru == 'sakugabooru':
+        sakugabooru.downloadBulk(tags, page, downloadDir, ratings, banned_tags)
