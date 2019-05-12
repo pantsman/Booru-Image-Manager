@@ -2,5 +2,4 @@ __pycache__/
 *.py[cod]
 .vscode
 *.db
-*.csv
 config.yml

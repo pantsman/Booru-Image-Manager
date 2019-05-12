@@ -2,7 +2,7 @@ import requests, hashlib, time
 
 from pathlib import Path
 
-baseUrl='https://danbooru.donmai.us/posts.json/'
+baseUrl='https://yande.re/post.json'
 
 def errorReporting(errorCode):
     if errorCode == 403:
@@ -11,6 +11,10 @@ def errorReporting(errorCode):
         return 'Error 404 received Not Found Ending Script'
     elif errorCode == 421:
         return 'Error 421 received User Throttled Ending Script'
+    elif errorCode == 422:
+        return 'Error 422 The resource is locked and cannot be modified'
+    elif errorCode == 423:
+        return 'Eror 423 Resource already exists'
     elif errorCode == 424:
         return 'Error 424 received Invalid Parameters Ending Script'
     elif errorCode == 500:
@@ -18,7 +22,7 @@ def errorReporting(errorCode):
     elif errorCode == 503:
         return 'Error 503 received Remote Service Cannot Handle the Request Ending Script'
     else:
-        return 'Error {0} Received'.format(errorCode)
+        return 'Error {0} Received Ending Script'.format(errorCode)
 
 def danboMd5(localMd5):  
     apiBase='?md5={0}'.format(localMd5)
@@ -41,13 +45,13 @@ def downloadBulk(tags, page, downloadDir, ratings, banned_tags):
     s = requests.session()
     result = search(tags,page)
     while type(result) != str and len(result.json()) > 0:
-        print('[Danboard]Processing page: {0}'.format(page))
+        print('[Yandere]Processing page: {0}'.format(page))
         for image in result.json():
             if 'file_url' in image:
                 downloadFile = Path('{0}/{1}.{2}'.format(downloadDir,image['id'],image['file_ext']))
                 if (downloadFile.exists() == False 
                         and image['rating'] in ratings 
-                        and any(x in banned_tags for x in image['tag_string'].split(' ')) == False):
+                        and any(x in banned_tags for x in image['tags'].split(' ')) == False):
                     imageBuff = s.get(image['file_url'])
                     downloadFile.write_bytes(imageBuff.content)
         page += 1
